@@ -108,10 +108,50 @@ def main():
         uploaded_file = st.file_uploader("Upload Conversation File", type=["json", "yaml", "yml"])
         analysis_type = st.selectbox("Select Analysis Type", ("Profanity Detection", "Privacy and Compliance Violation"))
         st.markdown("---")
-        st.info("The AI-powered analysis provides more nuanced results, while the pattern-based approach offers simple keyword detection.")
+        
+        with st.container(border=True):
+            st.subheader("📖 How to Use")
+            st.markdown("""
+            1. **Upload File:** Select a `.json` or `.yaml` conversation file.
+            2. **Select Analysis:** Choose the analysis type from the dropdown.
+            3. **Run Analysis:** Click the "Analyze Conversation" button.
+            4. **Review Results:** View the comparative analysis, call quality metrics, and transcript.
+            """)
+        
+        st.markdown("---")
+        st.markdown("Made by **Ivan D'souza**")
+        st.markdown("🔗[LinkedIn](https://www.linkedin.com/in/ivan-dsouza) | 🔗[GitHub](https://github.com/ivan-3101)")
+
 
     if not uploaded_file:
         st.info("Please upload a file using the sidebar to begin.")
+        
+        st.subheader("📄 Expected File Structure")
+        st.markdown("Your JSON or YAML file should contain a list of conversation entries, like this:")
+        
+        sample_code = """
+[
+    {
+        "speaker": "Agent",
+        "text": "Hello, is this Sarah Johnson?",
+        "stime": 0,
+        "etime": 5
+    },
+    {
+        "speaker": "Customer",
+        "text": "Yes, this is Sarah. Who's calling?",
+        "stime": 5.2,
+        "etime": 9
+    },
+    {
+        "speaker": "Agent",
+        "text": "Hi Sarah, this is Mark from XYZ Collections...",
+        "stime": 8,
+        "etime": 14
+    }
+]
+        """
+        st.code(sample_code, language='json')
         return
 
     try:
