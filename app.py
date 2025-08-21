@@ -110,16 +110,16 @@ def main():
         st.markdown("---")
         
         with st.container(border=True):
-            st.subheader("📖 How to Use")
+            st.subheader("📖 Quick Start Guide")
             st.markdown("""
-            1. **Upload File:** Select a `.json` or `.yaml` conversation file.
-            2. **Select Analysis:** Choose the analysis type from the dropdown.
-            3. **Run Analysis:** Click the "Analyze Conversation" button.
-            4. **Review Results:** View the comparative analysis, call quality metrics, and transcript.
+            1. 📁 **Upload File:** Select a `.json` or `.yaml` conversation file.
+            2. 🎯**Select Analysis:** Choose the analysis type from the dropdown.
+            3. 🚀**Run Analysis:** Click the "Analyze Conversation" button.
+            4. 📊**Review Results:** View the comparative analysis, call quality metrics, and transcript.
             """)
         
         st.markdown("---")
-        st.markdown("Made by **Ivan D'souza**")
+        st.markdown("Made by **Ivan Dsouza**")
         st.markdown("🔗[LinkedIn](https://www.linkedin.com/in/ivan-dsouza) | 🔗[GitHub](https://github.com/ivan-3101)")
 
 
