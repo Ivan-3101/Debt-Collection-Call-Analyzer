@@ -32,7 +32,6 @@ def analyze_profanity_pattern(data: List[Dict[str, Any]]) -> Tuple[bool, bool, L
         text = entry.get('text', '').lower()
         words = set(re.findall(r'\b\w+\b', text))
         
-        # Check for intersection between words in text and profanity list
         if PROFANITY_WORDS.intersection(words):
             speaker = entry.get('speaker', '').lower()
             profanity_details.append({
@@ -57,11 +56,9 @@ def analyze_compliance_pattern(data: List[Dict[str, Any]]) -> Tuple[bool, List[D
         text = entry.get('text', '').lower()
 
         if 'agent' in speaker:
-            # If any verification keyword is found, the agent is considered verified for the rest of the call.
             if not verified and any(keyword in text for keyword in VERIFICATION_KEYWORDS):
                 verified = True
 
-            # Check for sensitive info sharing; if not verified, it's a violation.
             matched_keywords = [kw for kw in SENSITIVE_KEYWORDS if kw in text]
             if matched_keywords and not verified:
                 violation_details.append({
@@ -70,7 +67,6 @@ def analyze_compliance_pattern(data: List[Dict[str, Any]]) -> Tuple[bool, List[D
                     'keywords_found': matched_keywords,
                 })
 
-    # A violation occurred if any such details were logged.
     violation_found = len(violation_details) > 0
     return violation_found, violation_details
 
@@ -89,7 +85,6 @@ def analyze_with_llm(data: List[Dict[str, Any]], entity: str, api_key: str) -> D
         f"{item['speaker']} ({item.get('stime', 0)}s): {item['text']}" for item in data
     )
     
-    # Prompts are structured for clear instructions and JSON output.
     prompts = {
         'Profanity Detection': f"""
         Analyze this customer service conversation for profane or inappropriate language.
@@ -99,7 +94,8 @@ def analyze_with_llm(data: List[Dict[str, Any]], entity: str, api_key: str) -> D
             "agent_profanity": boolean,
             "customer_profanity": boolean,
             "agent_examples": ["specific profane text from agent"],
-            "customer_examples": ["specific profane text from customer"]
+            "customer_examples": ["specific profane text from customer"],
+            "profanity_confidence": "high/medium/low"
         }}
         """,
         'Privacy and Compliance Violation': f"""
@@ -111,7 +107,8 @@ def analyze_with_llm(data: List[Dict[str, Any]], entity: str, api_key: str) -> D
             "compliance_violation": boolean,
             "verification_attempted": boolean,
             "violation_examples": ["specific violations"],
-            "verification_examples": ["verification attempts"]
+            "verification_examples": ["verification attempts"],
+            "compliance_confidence": "high/medium/low"
         }}
         """
     }
@@ -125,9 +122,17 @@ def analyze_with_llm(data: List[Dict[str, Any]], entity: str, api_key: str) -> D
             prompt, 
             generation_config={"response_mime_type": "application/json", "temperature": 0.1}
         )
-        # Clean response to ensure it's valid JSON
         cleaned_text = re.sub(r'```json\s*|\s*```', '', response.text.strip(), flags=re.DOTALL)
-        return json.loads(cleaned_text)
+        
+        # --- FIX IS HERE ---
+        parsed_response = json.loads(cleaned_text)
+        # Handle cases where the response is a list containing a single dictionary
+        if isinstance(parsed_response, list) and parsed_response:
+            return parsed_response[0]
+        elif isinstance(parsed_response, dict):
+            return parsed_response
+        else:
+            return {"error": "Received an unexpected format from LLM."}
 
     except json.JSONDecodeError:
         return {"error": "Failed to decode JSON from LLM response."}
