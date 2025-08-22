@@ -4,6 +4,216 @@ import json
 from analysis_functions import analyze_profanity_pattern, analyze_compliance_pattern, analyze_with_llm
 from call_quality import calculate_call_quality_metrics, create_call_quality_visualizations
 
+# --- Sample Data ---
+SAMPLE_DATA = {
+    "Good Call (No Violations)": [
+        {
+            "speaker": "Agent",
+            "text": "Hello, this is Sarah calling from Debt Solutions. How are you today?",
+            "stime": 0,
+            "etime": 7
+        },
+        {
+            "speaker": "Customer",
+            "text": "Hi Sarah, I'm alright, thanks. What's this about?",
+            "stime": 7.5,
+            "etime": 12
+        },
+        {
+            "speaker": "Agent",
+            "text": "I'm reaching out regarding an outstanding balance on your account. Before we proceed, could you please confirm your date of birth?",
+            "stime": 11,
+            "etime": 24
+        },
+        {
+            "speaker": "Customer",
+            "text": "Sure, it's July 15, 1990.",
+            "stime": 23,
+            "etime": 26
+        },
+        {
+            "speaker": "Agent",
+            "text": "Thank you for that information. Can you also verify your current address for me?",
+            "stime": 25,
+            "etime": 32
+        },
+        {
+            "speaker": "Customer",
+            "text": "Yes, it's 123 Elm Street, Springfield.",
+            "stime": 31,
+            "etime": 34
+        },
+        {
+            "speaker": "Agent",
+            "text": "Great, I have verified your identity. You currently have a balance of $250. How would you like to proceed with the payment?",
+            "stime": 33,
+            "etime": 46
+        },
+        {
+            "speaker": "Customer",
+            "text": "I can pay half of it today, about $125.",
+            "stime": 45,
+            "etime": 50
+        },
+        {
+            "speaker": "Agent",
+            "text": "That sounds good. Would you like to make that payment by credit card or bank transfer?",
+            "stime": 49,
+            "etime": 58
+        },
+        {
+            "speaker": "Customer",
+            "text": "I'll use my credit card.",
+            "stime": 57,
+            "etime": 59
+        },
+        {
+            "speaker": "Agent",
+            "text": "Perfect. Please hold on while I process that for you.",
+            "stime": 58,
+            "etime": 65
+        },
+        {
+            "speaker": "Customer",
+            "text": "Sure, take your time.",
+            "stime": 64,
+            "etime": 68
+        },
+        {
+            "speaker": "Agent",
+            "text": "Thank you for your patience. Your payment has been processed successfully. Is there anything else I can assist you with today?",
+            "stime": 67,
+            "etime": 80
+        },
+        {
+            "speaker": "Customer",
+            "text": "No, that's all. Thank you!",
+            "stime": 79,
+            "etime": 82
+        },
+        {
+            "speaker": "Agent",
+            "text": "You're welcome! Have a great day!",
+            "stime": 81,
+            "etime": 85
+        }
+    ],
+    
+    "Profanity Violation": [
+        {
+            "speaker": "Agent",
+            "text": "Hello, this is Kyle from XYZ Collections. How the hell are you?",
+            "stime": 0,
+            "etime": 7
+        },
+        {
+            "speaker": "Customer",
+            "text": "I'm doing well, thank you. How can I assist you today?",
+            "stime": 7.5,
+            "etime": 12
+        },
+        {
+            "speaker": "Agent",
+            "text": "I need to verify your identity before discussing your account. Can you please give me your date of birth?",
+            "stime": 11,
+            "etime": 21
+        },
+        {
+            "speaker": "Customer",
+            "text": "Sure, it's March 15, 1985.",
+            "stime": 20,
+            "etime": 23
+        },
+        {
+            "speaker": "Agent",
+            "text": "Alright, that checks out. Now, you owe us a shitload of money. What the hell are you planning to do about it?",
+            "stime": 22,
+            "etime": 34
+        },
+        {
+            "speaker": "Customer",
+            "text": "I plan to pay it off as soon as possible, but I need to discuss my options.",
+            "stime": 33,
+            "etime": 38
+        },
+        {
+            "speaker": "Agent",
+            "text": "Options? Don't give me that crap. You need to pay up, plain and simple!",
+            "stime": 37,
+            "etime": 46
+        },
+        {
+            "speaker": "Customer",
+            "text": "I understand, but I would like to know if I can set up a payment plan.",
+            "stime": 45,
+            "etime": 50
+        },
+        {
+            "speaker": "Agent",
+            "text": "Payment plan? Who the hell do you think you are? Just pay the damn balance!",
+            "stime": 49,
+            "etime": 58
+        },
+        {
+            "speaker": "Customer",
+            "text": "I really want to resolve this, but I need a reasonable solution.",
+            "stime": 57,
+            "etime": 62
+        },
+        {
+            "speaker": "Agent",
+            "text": "A reasonable solution is to pay what you owe! Stop wasting my time!",
+            "stime": 61,
+            "etime": 70
+        },
+        {
+            "speaker": "Customer",
+            "text": "I will find a way to make this work. Thank you for your time.",
+            "stime": 69,
+            "etime": 74
+        },
+        {
+            "speaker": "Agent",
+            "text": "Whatever, just get it done! Bye!",
+            "stime": 73,
+            "etime": 80
+        }
+    ],
+    
+    "Privacy Violation": [
+        {
+            "speaker": "Customer",
+            "text": "You have reached the voicemail of John Smith. Please leave a message after the beep.",
+            "stime": 0,
+            "etime": 8
+        },
+        {
+            "speaker": "Agent",
+            "text": "Hello, John. This is Lisa from Greenfield Collections. I wanted to discuss your account balance.",
+            "stime": 11,
+            "etime": 20
+        },
+        {
+            "speaker": "Customer",
+            "text": "If you need immediate assistance, please send an email.",
+            "stime": 21,
+            "etime": 27
+        },
+        {
+            "speaker": "Agent",
+            "text": "You can reach me at 1-800-555-0199. It's important to address this matter as soon as possible.",
+            "stime": 28,
+            "etime": 39
+        },
+        {
+            "speaker": "Customer",
+            "text": "Thank you for your call. I'll return it as soon as I can.",
+            "stime": 40,
+            "etime": 46
+        }
+    ]
+}
+
 # --- Streamlit Page Configuration ---
 st.set_page_config(
     layout="wide",
@@ -101,12 +311,22 @@ def render_transcript(data):
 # --- Main Application Logic ---
 def main():
     st.title("📞 Debt Collection Call Analyzer")
-    st.markdown("Upload a conversation file and click 'Analyze' to evaluate for profanity, compliance, and call quality.")
 
     with st.sidebar:
         st.header("⚙️ Configuration")
-        uploaded_file = st.file_uploader("Upload Conversation File", type=["json", "yaml", "yml"])
-
+        
+        # File upload OR sample selection
+        st.markdown("### 📁 Data Source")
+        data_source = st.radio("Choose data source:", ("Upload File", "Use Sample Data"))
+        
+        uploaded_file = None
+        selected_sample = None
+        
+        if data_source == "Upload File":
+            uploaded_file = st.file_uploader("Upload Conversation File", type=["json", "yaml", "yml"])
+        else:
+            selected_sample = st.selectbox("Select Sample Conversation:", list(SAMPLE_DATA.keys()))
+            st.info(f"Using sample: **{selected_sample}**")
 
         # Analysis type selection
         st.markdown("### 🎯 Analysis Options")
@@ -116,7 +336,7 @@ def main():
         with st.container():
             st.subheader("📖 Quick Start Guide")
             st.markdown("""
-            1. 📁 **Upload File:** Select a `.json` or `.yaml` conversation file.
+            1. 📁 **Choose Data:** Upload a file or select a sample conversation.
             2. 🎯**Select Analysis:** Choose the analysis type from the dropdown.
             3. 🚀**Run Analysis:** Click the "Analyze Conversation" button.
             4. 📊**Review Results:** View the comparative analysis, call quality metrics, and transcript.
@@ -126,9 +346,25 @@ def main():
         st.markdown("Made by **Ivan Dsouza**")
         st.markdown("🔗[LinkedIn](https://www.linkedin.com/in/ivan-dsouza) | 🔗[GitHub](https://github.com/ivan-3101)")
 
+    # Handle data source
+    data = None
+    data_source_name = ""
+    
+    if uploaded_file:
+        try:
+            content = uploaded_file.getvalue().decode("utf-8")
+            data = yaml.safe_load(content) if uploaded_file.name.endswith(('yaml', 'yml')) else json.loads(content)
+            data_source_name = uploaded_file.name
+        except Exception as e:
+            st.error(f"Error processing uploaded file: {e}")
+            return
+            
+    elif selected_sample:
+        data = SAMPLE_DATA[selected_sample]
+        data_source_name = selected_sample
 
-    if not uploaded_file:
-        st.info("👋 **Welcome!** Please upload a conversation file using the sidebar to begin analysis.")
+    if not data:
+        st.info("👋 **Welcome!** Please upload a conversation file or select a sample conversation to begin analysis.")
         
         st.subheader("📄 Expected File Structure")
         st.markdown("Your JSON or YAML file should contain a list of conversation entries, like this:")
@@ -156,64 +392,66 @@ def main():
 ]
         """
         st.code(sample_code, language='json')
+        
+        # Show sample data preview
+        st.subheader("🔍 Sample Data Preview")
+        for sample_name, sample_data in SAMPLE_DATA.items():
+            with st.expander(f"Preview: {sample_name}"):
+                st.write(f"**Total utterances:** {len(sample_data)}")
+                st.write(f"**Duration:** {sample_data[-1]['etime']}s")
+                st.json(sample_data[:2])  # Show first 2 entries
         return
 
-    try:
-        content = uploaded_file.getvalue().decode("utf-8")
-        data = yaml.safe_load(content) if uploaded_file.name.endswith(('yaml', 'yml')) else json.loads(content)
-        
-        st.success(f"File **`{uploaded_file.name}`** is loaded and ready for analysis.")
-        
-        analyze_button = st.button("Analyze Conversation", type="secondary")
+    st.success(f"Data **`{data_source_name}`** is loaded and ready for analysis.")
+    
+    analyze_button = st.button("Analyze Conversation", type="primary")
 
-        if analyze_button:
-            with st.spinner('Performing analysis... please wait.'):
-                # --- Perform all analyses first ---
-                try:
-                    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-                except (FileNotFoundError, KeyError):
-                    GEMINI_API_KEY = ""
-                
-                llm_result = analyze_with_llm(data, analysis_type, GEMINI_API_KEY)
-                if analysis_type == "Profanity Detection":
-                    pattern_result = analyze_profanity_pattern(data)
-                else:
-                    pattern_result = analyze_compliance_pattern(data)
+    if analyze_button:
+        with st.spinner('Performing analysis... please wait.'):
+            # --- Perform all analyses first ---
+            try:
+                GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+            except (FileNotFoundError, KeyError):
+                GEMINI_API_KEY = ""
+            
+            llm_result = analyze_with_llm(data, analysis_type, GEMINI_API_KEY)
+            if analysis_type == "Profanity Detection":
+                pattern_result = analyze_profanity_pattern(data)
+            else:
+                pattern_result = analyze_compliance_pattern(data)
 
-                # --- Display Comparative Analysis Section ---
-                st.header("🔍 Comparative Analysis")
-                col1, col2 = st.columns(2, gap="medium")
-                
-                with col1:
-                    with st.container(border=True):
-                        display_llm_analysis(analysis_type, llm_result)
-                with col2:
-                    with st.container(border=True):
-                        display_pattern_analysis(analysis_type, pattern_result)
-                
-                st.markdown("---")
-
-                # --- Call Quality Metrics Section ---
+            # --- Display Comparative Analysis Section ---
+            st.header("📊 Comparative Analysis")
+            col1, col2 = st.columns(2, gap="medium")
+            
+            with col1:
                 with st.container(border=True):
-                    st.subheader("📈 Call Quality Overview")
-                    call_metrics = calculate_call_quality_metrics(data)
-                    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-                    m_col1.metric("Total Duration", f"{call_metrics['total_duration']}s")
-                    m_col2.metric("Silence %", f"{call_metrics['silence_percentage']:.2f}%")
-                    m_col3.metric("Overtalk %", f"{call_metrics['overtalk_percentage']:.2f}%")
-                    
-                    agent_time = sum((i['end'] - i['start']) for i in call_metrics.get('speaking_intervals', []) if i['speaker'].lower() == 'agent')
-                    customer_time = sum((i['end'] - i['start']) for i in call_metrics.get('speaking_intervals', []) if i['speaker'].lower() != 'agent')
-                    m_col4.metric("Agent vs Customer Talk Time", f"{agent_time:.1f}s / {customer_time:.1f}s")
-                    
-                    fig = create_call_quality_visualizations(call_metrics)
-                    st.plotly_chart(fig, use_container_width=True)
+                    display_llm_analysis(analysis_type, llm_result)
+            with col2:
+                with st.container(border=True):
+                    display_pattern_analysis(analysis_type, pattern_result)
+            
+            st.markdown("---")
 
-                st.markdown("---")
-                render_transcript(data)
-                # st.balloons()
-    except Exception as e:
-        st.error(f"An error occurred while processing the file: {e}")
+            # --- Call Quality Metrics Section ---
+            with st.container(border=True):
+                st.subheader("📈 Call Quality Overview")
+                call_metrics = calculate_call_quality_metrics(data)
+                m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+                m_col1.metric("Total Duration", f"{call_metrics['total_duration']}s")
+                m_col2.metric("Silence %", f"{call_metrics['silence_percentage']:.2f}%")
+                m_col3.metric("Overtalk %", f"{call_metrics['overtalk_percentage']:.2f}%")
+                
+                agent_time = sum((i['end'] - i['start']) for i in call_metrics.get('speaking_intervals', []) if i['speaker'].lower() == 'agent')
+                customer_time = sum((i['end'] - i['start']) for i in call_metrics.get('speaking_intervals', []) if i['speaker'].lower() != 'agent')
+                m_col4.metric("Agent vs Customer Talk Time", f"{agent_time:.1f}s / {customer_time:.1f}s")
+                
+                fig = create_call_quality_visualizations(call_metrics)
+                st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown("---")
+            render_transcript(data)
+            st.balloons()
 
 if __name__ == "__main__":
     main()
