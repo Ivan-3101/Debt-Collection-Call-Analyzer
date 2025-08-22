@@ -106,10 +106,14 @@ def main():
     with st.sidebar:
         st.header("⚙️ Configuration")
         uploaded_file = st.file_uploader("Upload Conversation File", type=["json", "yaml", "yml"])
+
+
+        # Analysis type selection
+        st.markdown("### 🎯 Analysis Options")
         analysis_type = st.selectbox("Select Analysis Type", ("Profanity Detection", "Privacy and Compliance Violation"))
         st.markdown("---")
         
-        with st.container(border=True):
+        with st.container():
             st.subheader("📖 Quick Start Guide")
             st.markdown("""
             1. 📁 **Upload File:** Select a `.json` or `.yaml` conversation file.
@@ -124,7 +128,7 @@ def main():
 
 
     if not uploaded_file:
-        st.info("Please upload a file using the sidebar to begin.")
+        st.info("👋 **Welcome!** Please upload a conversation file using the sidebar to begin analysis.")
         
         st.subheader("📄 Expected File Structure")
         st.markdown("Your JSON or YAML file should contain a list of conversation entries, like this:")
@@ -207,7 +211,7 @@ def main():
 
                 st.markdown("---")
                 render_transcript(data)
-
+                # st.balloons()
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
 
