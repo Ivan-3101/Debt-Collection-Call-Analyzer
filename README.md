@@ -2,7 +2,7 @@
 
 A comprehensive Streamlit application for analyzing debt collection conversations to detect profanity, compliance violations, and evaluate call quality metrics.
 
-🚀 **[Live Demo](https://debt-collection-call-analyzer.streamlit.app/)**
+🚀 **[Live Demo](https://debt-collection-call-analyzer.streamlit.app/) (https://debt-collection-call-analyzer.streamlit.app/) ** 
 
 ## Features
 
